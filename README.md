@@ -5,7 +5,7 @@ Pong| Enduro
 :-----------------------:|:-----------------------:|
 <img src="https://github.com/XinJingHao/DQN-DDQN-Atari-Pytorch/raw/main/IMGs/Pong.png" width="320" height="200">| <img src="https://github.com/XinJingHao/DQN-DDQN-Atari-Pytorch/raw/main/IMGs/Enduro.png" width="320" height="200">
 
-Note that DDPG is notoriously susceptible to hyperparameters and thus is unstable to some extent. We strongly recommend you use its refinement [TD3](https://github.com/XinJingHao/TD3-Pytorch).
+Note that DDPG is notoriously susceptible to hyperparameters and thus is unstable sometimes. We strongly recommend you use its refinement [TD3](https://github.com/XinJingHao/TD3-Pytorch).
 **Other RL algorithms by Pytorch can be found [here](https://github.com/XinJingHao/RL-Algorithms-by-Pytorch).**
 
 ## Dependencies
