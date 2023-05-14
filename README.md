@@ -10,11 +10,13 @@ Note that DDPG is notoriously susceptible to hyperparameters and thus is unstabl
 
 ## Dependencies
 ```bash
-gym==0.19.0  
-box2d==2.3.8  
-numpy==1.21.6  
-pytorch==1.11.0 
-tensorboard==2.9.1
+python == 3.8.5
+gym == 0.19.0  
+pyglet == 1.5.15
+box2d == 2.3.10  
+numpy == 1.24.3  
+pytorch == 1.13.1
+tensorboard == 2.13.0
 ```
 
 ## How to use my code
