@@ -1,9 +1,9 @@
 # DDPG-Pytorch
 A clean Pytorch implementation of DDPG on continuous action space. Here is the result (all the experiments are trained with same hyperparameters):  
 
-Pong| Enduro
+Pendulum| LunarLanderContinuous
 :-----------------------:|:-----------------------:|
-<img src="https://github.com/XinJingHao/DQN-DDQN-Atari-Pytorch/raw/main/IMGs/Pong.png" width="320" height="200">| <img src="https://github.com/XinJingHao/DQN-DDQN-Atari-Pytorch/raw/main/IMGs/Enduro.png" width="320" height="200">
+<img src="https://github.com/XinJingHao/DDPG-Pytorch/blob/main/IMGs/ddpg_pv0.svg" width="320" height="200">| <img src="https://github.com/XinJingHao/DDPG-Pytorch/blob/main/IMGs/ddpg_lld.svg" width="320" height="200">
 
 Note that DDPG is notoriously susceptible to hyperparameters and thus is unstable sometimes. We strongly recommend you use its refinement [TD3](https://github.com/XinJingHao/TD3-Pytorch).
 **Other RL algorithms by Pytorch can be found [here](https://github.com/XinJingHao/RL-Algorithms-by-Pytorch).**
