@@ -47,10 +47,7 @@ The ```--EnvIdex``` can be set to be 0~5, where
 '--EnvIdex 4' for 'BipedalWalker-v3'  
 '--EnvIdex 5' for 'BipedalWalkerHardcore-v3' 
 ```
-
-P.S. 
-
-if you want train on BipedalWalker-v3, BipedalWalkerHardcore-v3, or LunarLanderContinuous-v2, you need to install [box2d-py](https://gymnasium.farama.org/environments/box2d/) first.
+Note: if you want train on BipedalWalker-v3, BipedalWalkerHardcore-v3, or LunarLanderContinuous-v2, you need to install [box2d-py](https://gymnasium.farama.org/environments/box2d/) first.
 
 if you want train on Humanoid-v2 or HalfCheetah-v2, you need to install [MuJoCo](https://gymnasium.farama.org/environments/mujoco/) first.
 
