@@ -3,7 +3,7 @@
 
 Pendulum| LunarLanderContinuous
 :-----------------------:|:-----------------------:|
-<img src="https://github.com/XinJingHao/DQN-DDQN-Pytorch/blob/main/IMGs/Render_CVP1.gif" width="90%" height="auto">  | <img src="https://github.com/XinJingHao/DQN-DDQN-Pytorch/blob/main/IMGs/Render%20of%20DDQN.gif" width="90%" height="auto">
+<img src="https://github.com/XinJingHao/PPO-Continuous-Pytorch/blob/main/render_gif/PV1.gif" width="75%" height="auto">  | <img src="https://github.com/XinJingHao/PPO-Continuous-Pytorch/blob/main/render_gif/lldcV2.gif" width="75%" height="auto">
 <img src="https://github.com/XinJingHao/DDPG-Pytorch/blob/main/IMGs/ddpg_pv0.svg" width="90%" height="auto">| <img src="https://github.com/XinJingHao/DDPG-Pytorch/blob/main/IMGs/ddpg_lld.svg" width="90%" height="auto">
 
 Note that DDPG is notoriously susceptible to hyperparameters and thus is unstable sometimes. We strongly recommend you use its refinement [TD3](https://github.com/XinJingHao/TD3-Pytorch).
