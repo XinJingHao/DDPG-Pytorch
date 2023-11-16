@@ -1,16 +1,17 @@
-import gym
-import numpy as np
-import torch
-from DDPG import DDPG_Agent, ReplayBuffer
 from torch.utils.tensorboard import SummaryWriter
-import os, shutil
-from datetime import datetime
-import argparse
 from utils import str2bool,evaluate_policy
+from datetime import datetime
+from DDPG import DDPG_agent
+import gymnasium as gym
+import numpy as np
+import os, shutil
+import argparse
+import torch
 
 
 '''Hyperparameter Setting'''
 parser = argparse.ArgumentParser()
+parser.add_argument('--dvc', type=str, default='cuda', help='running device: cuda or cpu')
 parser.add_argument('--EnvIdex', type=int, default=0, help='PV0, Lch_Cv2, Humanv2, HCv2, BWv3, BWHv3')
 parser.add_argument('--write', type=str2bool, default=True, help='Use SummaryWriter to record the training')
 parser.add_argument('--render', type=str2bool, default=False, help='Render or Not')
@@ -27,29 +28,34 @@ parser.add_argument('--net_width', type=int, default=400, help='Hidden net width
 parser.add_argument('--a_lr', type=float, default=1e-3, help='Learning rate of actor')
 parser.add_argument('--c_lr', type=float, default=1e-3, help='Learning rate of critic')
 parser.add_argument('--batch_size', type=int, default=128, help='batch_size of training')
-parser.add_argument('--warmup', type=int, default=5e4, help='random steps before trianing')
+parser.add_argument('--random_steps', type=int, default=5e4, help='random steps before trianing')
 parser.add_argument('--noise', type=float, default=0.1, help='exploring noise')
 opt = parser.parse_args()
+opt.dvc = torch.device(opt.dvc) # from str to torch.device
 print(opt)
 
 
-
 def main():
-    EnvName = ['Pendulum-v0','LunarLanderContinuous-v2','Humanoid-v2','HalfCheetah-v2','BipedalWalker-v3','BipedalWalkerHardcore-v3']
+    EnvName = ['Pendulum-v1','LunarLanderContinuous-v2','Humanoid-v2','HalfCheetah-v2','BipedalWalker-v3','BipedalWalkerHardcore-v3']
     BrifEnvName = ['PV0', 'LLdV2', 'Humanv2', 'HCv2','BWv3', 'BWHv3']
 
     # Build Env
-    env = gym.make(EnvName[opt.EnvIdex])
+    env = gym.make(EnvName[opt.EnvIdex], render_mode = "human" if opt.render else None)
     eval_env = gym.make(EnvName[opt.EnvIdex])
     opt.state_dim = env.observation_space.shape[0]
     opt.action_dim = env.action_space.shape[0]
     opt.max_action = float(env.action_space.high[0])   #remark: action space【-max,max】
-    print('Env:', EnvName[opt.EnvIdex], '  state_dim:', opt.state_dim, '  action_dim:', opt.action_dim, '  max_a:', opt.max_action,
-          '  min_a:', env.action_space.low[0],'  max_e_steps:',env._max_episode_steps )
+    print(f'Env:{EnvName[opt.EnvIdex]}  state_dim:{opt.state_dim}  action_dim:{opt.action_dim}  '
+          f'max_a:{opt.max_action}  min_a:{env.action_space.low[0]}  max_e_steps:{env._max_episode_steps}')
 
-    # Random seed config:
-    torch.manual_seed(opt.seed)
+    # Seed Everything
+    env_seed = opt.seed
     np.random.seed(opt.seed)
+    torch.manual_seed(opt.seed)
+    torch.cuda.manual_seed(opt.seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    print("Random Seed: {}".format(opt.seed))
 
     # Build SummaryWriter to record training curves
     if opt.write:
@@ -62,52 +68,44 @@ def main():
 
     # Build DRL model
     if not os.path.exists('model'): os.mkdir('model')
-    model = DDPG_Agent(opt)
-    if opt.Loadmodel: model.load(BrifEnvName[opt.EnvIdex], opt.ModelIdex)
+    agent = DDPG_agent(**vars(opt)) # var: transfer argparse to dictionary
+    if opt.Loadmodel: agent.load(BrifEnvName[opt.EnvIdex], opt.ModelIdex)
 
     if opt.render:
-        score = evaluate_policy(eval_env, model, turns=10, render=True)
-        print('EnvName:', BrifEnvName[opt.EnvIdex], 'score:', score)
+        while True:
+            score = evaluate_policy(env, agent, turns=1)
+            print('EnvName:', BrifEnvName[opt.EnvIdex], 'score:', score)
     else:
         total_steps = 0
         while total_steps < opt.Max_train_steps:
-            s, done, ep_steps = env.reset(), False, 0
+            s, info = env.reset(seed=env_seed)  # Do not use opt.seed directly, or it can overfit to opt.seed
+            env_seed += 1
+            done = False
 
             '''Interact & trian'''
             while not done:  
-                if total_steps < opt.warmup:
-                    a = env.action_space.sample()
-                else:
-                    a = (model.select_action(s) + np.random.normal(0, opt.max_action * opt.noise, size=opt.action_dim) 
-                         ).clip(-opt.max_action, opt.max_action)  # explore: deterministic actions + noise
-                s_next, r, done, info = env.step(a)
-                ep_steps += 1 #steps of current episode
+                if total_steps < opt.random_steps: a = env.action_space.sample()
+                else: a = agent.select_action(s, deterministic=False)
+                s_next, r, dw, tr, info = env.step(a) # dw: dead&win; tr: truncated
+                done = (dw or tr)
 
-                '''Avoid impacts caused by reaching max episode steps'''
-                if (done and ep_steps != env._max_episode_steps):
-                    dw = True  # dw: dead and win, namely terminated
-                else:
-                    dw = False # truncated
-
-                model.replay_buffer.add(s, a, r, s_next, dw)
+                agent.replay_buffer.add(s, a, r, s_next, dw)
                 s = s_next
                 total_steps += 1
 
-                # train the model
-                if total_steps >= opt.warmup:
-                    model.train()   
+                '''train'''
+                if total_steps >= opt.random_steps:
+                    agent.train()
 
                 '''record & log'''
                 if total_steps % opt.eval_interval == 0:
-                    score = evaluate_policy(eval_env, model)              
-                    if opt.write:
-                        writer.add_scalar('ep_r', score, global_step=total_steps)
-                    print('EnvName:', BrifEnvName[opt.EnvIdex], 'steps: {}k'.format(int(total_steps/1000)), 'score:', score)
-                         
+                    ep_r = evaluate_policy(eval_env, agent, turns=3)
+                    if opt.write: writer.add_scalar('ep_r', ep_r, global_step=total_steps)
+                    print(f'EnvName:{BrifEnvName[opt.EnvIdex]}, Steps: {int(total_steps/1000)}k, Episode Reward:{ep_r}')
 
                 '''save model'''
                 if total_steps % opt.save_interval == 0:
-                    model.save(BrifEnvName[opt.EnvIdex],total_steps)
+                    agent.save(BrifEnvName[opt.EnvIdex], int(total_steps/1000))
         env.close()
         eval_env.close()
 
