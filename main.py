@@ -1,9 +1,7 @@
-from torch.utils.tensorboard import SummaryWriter
 from utils import str2bool,evaluate_policy
 from datetime import datetime
 from DDPG import DDPG_agent
 import gymnasium as gym
-import numpy as np
 import os, shutil
 import argparse
 import torch
@@ -12,8 +10,8 @@ import torch
 '''Hyperparameter Setting'''
 parser = argparse.ArgumentParser()
 parser.add_argument('--dvc', type=str, default='cuda', help='running device: cuda or cpu')
-parser.add_argument('--EnvIdex', type=int, default=0, help='PV0, Lch_Cv2, Humanv2, HCv2, BWv3, BWHv3')
-parser.add_argument('--write', type=str2bool, default=True, help='Use SummaryWriter to record the training')
+parser.add_argument('--EnvIdex', type=int, default=0, help='PV1, Lch_Cv2, Humanv4, HCv4, BWv3, BWHv3')
+parser.add_argument('--write', type=str2bool, default=False, help='Use SummaryWriter to record the training')
 parser.add_argument('--render', type=str2bool, default=False, help='Render or Not')
 parser.add_argument('--Loadmodel', type=str2bool, default=False, help='Load pretrained model or Not')
 parser.add_argument('--ModelIdex', type=int, default=100, help='which model to load')
@@ -36,8 +34,8 @@ print(opt)
 
 
 def main():
-    EnvName = ['Pendulum-v1','LunarLanderContinuous-v2','Humanoid-v2','HalfCheetah-v2','BipedalWalker-v3','BipedalWalkerHardcore-v3']
-    BrifEnvName = ['PV0', 'LLdV2', 'Humanv2', 'HCv2','BWv3', 'BWHv3']
+    EnvName = ['Pendulum-v1','LunarLanderContinuous-v2','Humanoid-v4','HalfCheetah-v4','BipedalWalker-v3','BipedalWalkerHardcore-v3']
+    BrifEnvName = ['PV1', 'LLdV2', 'Humanv4', 'HCv4','BWv3', 'BWHv3']
 
     # Build Env
     env = gym.make(EnvName[opt.EnvIdex], render_mode = "human" if opt.render else None)
@@ -50,7 +48,6 @@ def main():
 
     # Seed Everything
     env_seed = opt.seed
-    np.random.seed(opt.seed)
     torch.manual_seed(opt.seed)
     torch.cuda.manual_seed(opt.seed)
     torch.backends.cudnn.deterministic = True
@@ -59,6 +56,7 @@ def main():
 
     # Build SummaryWriter to record training curves
     if opt.write:
+        from torch.utils.tensorboard import SummaryWriter
         timenow = str(datetime.now())[0:-10]
         timenow = ' ' + timenow[0:13] + '_' + timenow[-2::]
         writepath = 'runs/{}'.format(BrifEnvName[opt.EnvIdex]) + timenow
